@@ -142,3 +142,54 @@ def test_migrate_gdrive_aucune_photo(monkeypatch):
     monkeypatch.setattr(rclone, "lsjson", _faux_lsjson([], []))
     with pytest.raises(SystemExit, match="Aucune photo trouvée"):
         migrate_gdrive.main([])
+
+
+def test_migrate_upload_echec_affiche_stderr_rclone(monkeypatch, capsys):
+    drive = [
+        {"Path": "a.jpg", "Size": 10, "ModTime": "2024-07-15T10:30:00Z", "IsDir": False}
+    ]
+    monkeypatch.setattr(rclone, "lsjson", _faux_lsjson(drive, []))
+
+    def faux_cat(remote, chemin, dest):
+        dest.write(b"faux contenu jpg")
+
+    def faux_copyto(local, remote, chemin):
+        raise rclone.RcloneError("rclone copyto vers nc:Photos/2024/07/a.jpg : HTTP 403 Forbidden")
+
+    monkeypatch.setattr(rclone, "cat", faux_cat)
+    monkeypatch.setattr(rclone, "mkdir", lambda remote, chemin: None)
+    monkeypatch.setattr(rclone, "copyto", faux_copyto)
+    code = migrate_gdrive.main([])
+    assert code == 1
+    out = capsys.readouterr().out
+    assert "[erreur] a.jpg" in out and "403 Forbidden" in out
+    assert "1 erreur(s)" in out
+
+
+def test_migrate_upload_ok_puis_doublon_au_relance(monkeypatch, capsys):
+    drive = [
+        {"Path": "a.jpg", "Size": 10, "ModTime": "2024-07-15T10:30:00Z", "IsDir": False}
+    ]
+    nc_vide = []
+    monkeypatch.setattr(rclone, "lsjson", _faux_lsjson(drive, nc_vide))
+    envoyes = []
+
+    def faux_cat(remote, chemin, dest):
+        dest.write(b"faux contenu jpg")
+
+    def faux_copyto(local, remote, chemin):
+        envoyes.append(chemin)
+
+    monkeypatch.setattr(rclone, "cat", faux_cat)
+    monkeypatch.setattr(rclone, "mkdir", lambda remote, chemin: None)
+    monkeypatch.setattr(rclone, "copyto", faux_copyto)
+    assert migrate_gdrive.main([]) == 0
+    assert envoyes == ["Photos/2024/07/a.jpg"]
+    assert "[ok] a.jpg -> 2024/07/a.jpg" in capsys.readouterr().out
+
+    # Relance : le fichier est dans l'index (même nom + même taille) -> doublon
+    nc_plein = [{"Path": "2024/07/a.jpg", "Size": 10, "IsDir": False}]
+    monkeypatch.setattr(rclone, "lsjson", _faux_lsjson(drive, nc_plein))
+    assert migrate_gdrive.main([]) == 0
+    out = capsys.readouterr().out
+    assert "[doublon] a.jpg" in out and envoyes == ["Photos/2024/07/a.jpg"]
