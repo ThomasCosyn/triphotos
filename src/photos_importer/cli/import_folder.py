@@ -11,6 +11,7 @@ import os
 import sys
 from pathlib import Path
 
+from .. import logs_temps_reel
 from ..config import ConfigError, identifiants
 from ..organize import avertir_heic, ranger_local, ranger_webdav
 
@@ -72,6 +73,7 @@ def construire_parseur() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Point d'entrée console. Code de sortie 1 si des erreurs, 0 sinon."""
+    logs_temps_reel()
     args = construire_parseur().parse_args(argv)
 
     if not args.source.is_dir():
