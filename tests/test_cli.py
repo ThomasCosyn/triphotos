@@ -14,6 +14,12 @@ def _jpg(chemin, date_exif="2024:07:15 10:30:00"):
     img.save(chemin, exif=exif)
 
 
+def test_logs_temps_reel_ne_plante_pas():
+    import photos_importer
+
+    photos_importer.logs_temps_reel()  # ne doit rien lever (stdout reconfiguré en ligne)
+
+
 def test_import_folder_mode_local(tmp_path, capsys):
     src = tmp_path / "Triage"
     src.mkdir()

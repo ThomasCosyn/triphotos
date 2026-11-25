@@ -216,7 +216,10 @@ affichées sont estimées (modtime Drive), car lire l'EXIF exige le contenu.
 - **Migration longue** : par conception, chaque fichier est téléchargé du
   Drive puis renvoyé vers Nextcloud, un seul à la fois (relançable). Lance la
   commande dans `tmux`/`screen` ou la nuit ; la progression `[i/total]` avance,
-  et une relance ne re-traite que ce qui manque.
+  et une relance ne re-traite que ce qui manque. Les commandes passent stdout
+  en buffering ligne : `... | tee ~/mig.log` affiche la progression en direct
+  (sinon le log reste vide à cause du buffering par blocs de Python). Pour
+  suivre la progression autrement : `rclone lsl nextcloud:Photos --recursive | wc -l`.
 
 ## Développement
 
