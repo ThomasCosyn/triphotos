@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "photos-importer"
+version = "0.1.0"
+description = "Range et importe des photos vers un Nextcloud auto-hébergé (Photos/YYYY/MM) : dossier local, iPhone en USB, migration Google Drive."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "Pillow>=10.0",
+    "requests>=2.28",
+]
+
+[project.optional-dependencies]
+heic = ["pillow-heif>=0.13"]
+dev = [
+    "pytest>=8",
+    "ruff>=0.8",
+]
+
+[project.scripts]
+photos-import-folder = "photos_importer.cli.import_folder:main"
+photos-from-phone = "photos_importer.cli.from_phone:main"
+photos-migrate-gdrive = "photos_importer.cli.migrate_gdrive:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
