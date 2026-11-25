@@ -68,3 +68,18 @@ def copyto(local: Path, remote: str, chemin: str) -> None:
     )
     if resultat.returncode != 0:
         raise RcloneError(f"rclone copyto vers {remote}:{chemin} : {_stderr(resultat)}")
+
+
+def copy(src: str, dst: str, dry_run: bool = False) -> None:
+    """Copie récursivement un dossier remote vers un autre (jamais de suppression).
+
+    La sortie de rclone n'est pas capturée : la progression s'affiche en direct
+    (utile dans tmux). Idempotent : rclone ignore les fichiers déjà copiés
+    (même taille + même modtime). Lève RcloneError si échec.
+    """
+    cmd = ["rclone", "copy", src, dst, "--create-empty-src-dirs"]
+    if dry_run:
+        cmd.append("--dry-run")
+    resultat = subprocess.run(cmd)
+    if resultat.returncode != 0:
+        raise RcloneError(f"rclone copy {src} -> {dst} a échoué (code {resultat.returncode})")
