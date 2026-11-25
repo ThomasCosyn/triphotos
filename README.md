@@ -13,7 +13,8 @@ Trois commandes, trois cas d'usage :
 |---|---|
 | `photos-import-folder` | Range un dossier de triage local, en local (`--dest`) ou par upload WebDAV (`--webdav`) |
 | `photos-from-phone` | iPhone branché en USB : copie du DCIM vers le triage, puis upload WebDAV |
-| `photos-migrate-gdrive` | Migration Google Drive → Nextcloud via deux remotes rclone |
+| `photos-migrate-gdrive` | Migration Google Drive → Nextcloud, triée par date dans `Photos/YYYY/MM` |
+| `photos-copy-folder` | Copie un dossier Drive **tel quel** (sans tri par date) vers tes Fichiers Nextcloud |
 
 La date de prise de vue est lue en cascade — EXIF (`DateTimeOriginal` puis
 `DateTime`) → pour les vidéos et sons, date via `ffprobe` → modtime distante
@@ -173,6 +174,27 @@ trieur), `rclone mkdir` (idempotent) puis `rclone copyto` vers
 Un seul fichier temporaire à la fois : la migration est **relançable**, une
 interruption reprend où elle s'était arrêtée. En `--dry-run`, les dates
 affichées sont estimées (modtime Drive), car lire l'EXIF exige le contenu.
+
+### `photos-copy-folder` — copier un dossier Drive tel quel
+
+Pour recopier un dossier entier (documents, etc.) dans tes Fichiers
+Nextcloud **sans tri par date**, avec sa structure :
+
+```bash
+# gdrive:Travail -> racine de tes Fichiers Nextcloud (nextcloud:Travail)
+photos-copy-folder --drive-remote gdrive --nc-remote nextcloud --source Travail
+
+# dossier avec espaces, vers un sous-dossier précis
+photos-copy-folder --drive-remote gdrive --nc-remote nextcloud --source '2015 ski' --dest 'Documents/2015 ski'
+
+# simulation : affiche ce qui serait copié
+photos-copy-folder --drive-remote gdrive --nc-remote nextcloud --source Travail --dry-run
+```
+
+C'est un `rclone copy` (jamais `sync --delete`) : **idempotent** (les fichiers
+déjà copiés — même taille + même modtime — sont ignorés à la relance) et
+**aucune suppression** des deux côtés. La progression s'affiche en direct
+(pratique dans `tmux ... | tee log`).
 
 ## Ce que les scripts ne font jamais
 

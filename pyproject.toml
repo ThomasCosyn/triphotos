@@ -24,6 +24,7 @@ dev = [
 photos-import-folder = "photos_importer.cli.import_folder:main"
 photos-from-phone = "photos_importer.cli.from_phone:main"
 photos-migrate-gdrive = "photos_importer.cli.migrate_gdrive:main"
+photos-copy-folder = "photos_importer.cli.copy_folder:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
