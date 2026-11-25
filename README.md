@@ -207,6 +207,16 @@ affichées sont estimées (modtime Drive), car lire l'EXIF exige le contenu.
 - **Téléphone non détecté** : vérifie `ls /run/user/$UID/gvfs/` après avoir
   déverrouillé l'iPhone et validé « Faire confiance » ; installe
   `libimobiledevice6 libimobiledevice-utils`.
+- **« échec de l'upload » pendant la migration** : le message affiche désormais
+  la stderr de rclone (HTTP 401/403, dossier introuvable…). Vérifie le remote
+  Nextcloud : `rclone config show nextcloud` — `url` doit contenir
+  `/remote.php/dav/files/<user>`, `vendor = nextcloud`, et `pass` doit être le
+  **mot de passe d'application**. Teste à la main :
+  `echo test > /tmp/t.txt && rclone copyto /tmp/t.txt nextcloud:Photos/t.txt -v`.
+- **Migration longue** : par conception, chaque fichier est téléchargé du
+  Drive puis renvoyé vers Nextcloud, un seul à la fois (relançable). Lance la
+  commande dans `tmux`/`screen` ou la nuit ; la progression `[i/total]` avance,
+  et une relance ne re-traite que ce qui manque.
 
 ## Développement
 

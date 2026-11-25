@@ -25,13 +25,13 @@ def test_lsjson_ok(monkeypatch):
     assert entrees[0]["Path"] == "a.jpg"
 
 
-def test_lsjson_echec_leve_rcloneerror(monkeypatch):
+def test_lsjson_echec_leve_rcloneerror_avec_stderr(monkeypatch):
     monkeypatch.setattr(
         rclone.subprocess,
         "run",
-        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 1, stdout="", stderr="boom"),
+        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 1, stdout="", stderr="boom 401"),
     )
-    with pytest.raises(rclone.RcloneError, match="boom"):
+    with pytest.raises(rclone.RcloneError, match="boom 401"):
         rclone.lsjson("drive", "Photos")
 
 
@@ -53,26 +53,37 @@ def test_cat_ecrit_dans_le_flux(tmp_path, monkeypatch):
     monkeypatch.setattr(rclone.subprocess, "run", faux_run)
     dest = tmp_path / "out.bin"
     with open(dest, "wb") as f:
-        assert rclone.cat("drive", "Photos/a.jpg", f) is True
+        rclone.cat("drive", "Photos/a.jpg", f)  # succès : ne lève rien, retourne None
     assert dest.read_bytes() == "contenu streamé".encode()
 
 
-def test_cat_echec(tmp_path, monkeypatch):
+def test_cat_echec_leve_avec_stderr(tmp_path, monkeypatch):
     monkeypatch.setattr(
         rclone.subprocess,
         "run",
-        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 1, stderr=b"err"),
+        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 1, stderr=b"not found"),
     )
     with open(tmp_path / "out.bin", "wb") as f:
-        assert rclone.cat("drive", "Photos/a.jpg", f) is False
+        with pytest.raises(rclone.RcloneError, match="not found"):
+            rclone.cat("drive", "Photos/a.jpg", f)
 
 
-def test_mkdir_et_copyto_codes_retour(monkeypatch):
-    codes = iter([0, 1])
+def test_mkdir_et_copyto_levent_avec_stderr(monkeypatch):
+    def faux_run(cmd, **kwargs):
+        return subprocess.CompletedProcess(cmd, 1, stderr=b"HTTP 403 Forbidden")
+
+    monkeypatch.setattr(rclone.subprocess, "run", faux_run)
+    with pytest.raises(rclone.RcloneError, match="403"):
+        rclone.mkdir("nc", "Photos/2024/07")
+    with pytest.raises(rclone.RcloneError, match="403"):
+        rclone.copyto(Path("/tmp/x.jpg"), "nc", "Photos/2024/07/x.jpg")
+
+
+def test_mkdir_et_copyto_ok(monkeypatch):
     monkeypatch.setattr(
         rclone.subprocess,
         "run",
-        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, next(codes)),
+        lambda cmd, **kwargs: subprocess.CompletedProcess(cmd, 0, stderr=b""),
     )
-    assert rclone.mkdir("nc", "Photos/2024/07") is True
-    assert rclone.copyto(Path("/tmp/x.jpg"), "nc", "Photos/2024/07/x.jpg") is False
+    assert rclone.mkdir("nc", "Photos/2024/07") is None
+    assert rclone.copyto(Path("/tmp/x.jpg"), "nc", "Photos/2024/07/x.jpg") is None

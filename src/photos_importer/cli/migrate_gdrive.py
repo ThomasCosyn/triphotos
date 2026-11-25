@@ -97,7 +97,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Listing de {args.nc_remote}:{args.dest} ...")
     try:
         existants = rclone.lsjson(args.nc_remote, args.dest)
-    except rclone.RcloneError:
+    except rclone.RcloneError as e:
+        print(f"(dossier distant absent ou illisible, index vide : {e})")
         existants = []  # le dossier n'existe pas encore : on part de zéro
     index = IndexNomTailles()
     for e in existants:
@@ -130,10 +131,11 @@ def main(argv: list[str] | None = None) -> int:
                 migres += 1
                 continue
 
-            with open(tmp, "wb") as sortant:
-                ok = rclone.cat(args.drive_remote, f"{args.source}/{f['chemin']}", sortant)
-            if not ok:
-                print(f"[{i}/{total}] [erreur] {nom} : téléchargement impossible")
+            try:
+                with open(tmp, "wb") as sortant:
+                    rclone.cat(args.drive_remote, f"{args.source}/{f['chemin']}", sortant)
+            except rclone.RcloneError as e:
+                print(f"[{i}/{total}] [erreur] {nom} : téléchargement impossible : {e}")
                 erreurs += 1
                 continue
 
@@ -141,18 +143,24 @@ def main(argv: list[str] | None = None) -> int:
             sous_dossier = f"{args.dest}/{date.year:04d}/{date.month:02d}"
 
             if sous_dossier not in dossiers_crees:
-                if rclone.mkdir(args.nc_remote, sous_dossier):
+                try:
+                    rclone.mkdir(args.nc_remote, sous_dossier)
                     dossiers_crees.add(sous_dossier)  # existait déjà : OK aussi
+                except rclone.RcloneError as e:
+                    print(f"[{i}/{total}] [attention] mkdir {sous_dossier} : {e}")
 
-            if rclone.copyto(tmp, args.nc_remote, f"{sous_dossier}/{cible}"):
-                index.ajouter(cible, f["taille"])
-                print(f"[{i}/{total}] [ok] {nom} -> {date.year:04d}/{date.month:02d}/{cible}")
-                migres += 1
-            else:
-                print(f"[{i}/{total}] [erreur] {nom} : échec de l'upload")
+            try:
+                rclone.copyto(tmp, args.nc_remote, f"{sous_dossier}/{cible}")
+            except rclone.RcloneError as e:
+                print(f"[{i}/{total}] [erreur] {nom} : échec de l'upload : {e}")
                 erreurs += 1
+                tmp.unlink(missing_ok=True)
+                continue
+            index.ajouter(cible, f["taille"])
+            print(f"[{i}/{total}] [ok] {nom} -> {date.year:04d}/{date.month:02d}/{cible}")
+            migres += 1
 
-            tmp.unlink()  # libère la place avant le fichier suivant
+            tmp.unlink(missing_ok=True)  # libère la place avant le fichier suivant
 
     print(f"\nTerminé : {migres} migré(s), {deja} déjà présent(s), {erreurs} erreur(s).")
     return 1 if erreurs else 0
