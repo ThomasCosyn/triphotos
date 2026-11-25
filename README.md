@@ -77,7 +77,8 @@ name> drive
 Storage> drive
 client_id> (laisser vide, celui de rclone convient)
 client_secret> (laisser vide)
-scope> 1        # 1 = read-only : accès en lecture seule
+scope> drive.readonly   # tape la valeur directement (ou choisis « Read-only » dans la liste)
+                        # ne PAS laisser « drive » : ce serait un accès complet en écriture
 root_folder_id> (laisser vide)
 service_account_file> (laisser vide)
 Edit advanced config? n
