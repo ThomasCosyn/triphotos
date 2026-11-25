@@ -99,6 +99,24 @@ def test_date_prise_image_exif_puis_modtime(tmp_path, monkeypatch):
     assert date_prise(p, modtime="2023-08-09T01:02:03Z") == datetime(2023, 8, 9, 1, 2, 3)
 
 
+def test_date_prise_son_wav_ffprobe(tmp_path, monkeypatch):
+    from photos_importer import dates
+
+    p = tmp_path / "son.wav"
+    p.write_bytes(b"x")
+    monkeypatch.setattr(dates, "date_video", lambda _: datetime(2008, 6, 1, 12, 0, 0))
+    assert dates.date_prise(p) == datetime(2008, 6, 1, 12, 0, 0)
+
+
+def test_date_prise_video_mts_ffprobe(tmp_path, monkeypatch):
+    from photos_importer import dates
+
+    p = tmp_path / "video.MTS"
+    p.write_bytes(b"x")
+    monkeypatch.setattr(dates, "date_video", lambda _: datetime(2008, 6, 1, 12, 0, 0))
+    assert dates.date_prise(p) == datetime(2008, 6, 1, 12, 0, 0)
+
+
 def test_date_prise_repli_mtime_puis_maintenant(tmp_path, monkeypatch):
     p = tmp_path / "f.bin"
     p.write_bytes(b"x")

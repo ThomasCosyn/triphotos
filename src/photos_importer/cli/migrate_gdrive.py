@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .. import rclone
-from ..dates import EXTS_IMAGES, EXTS_VIDEOS, HEIC_OK, date_modtime_rfc3339, date_prise
+from ..dates import EXTS_AUDIO, EXTS_IMAGES, EXTS_VIDEOS, HEIC_OK, date_modtime_rfc3339, date_prise
 from ..dedup import IndexNomTailles, nom_unique
 
 
@@ -63,7 +63,7 @@ def lister_candidats(drive_remote: str, source: str) -> list[dict]:
         if e.get("IsDir"):
             continue
         extension = Path(e["Path"]).suffix.lower()
-        if extension in EXTS_IMAGES or extension in EXTS_VIDEOS:
+        if extension in EXTS_IMAGES or extension in EXTS_VIDEOS or extension in EXTS_AUDIO:
             candidats.append(
                 {
                     "chemin": e["Path"],
@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.limit:
         candidats = candidats[: args.limit]
     total = len(candidats)
-    print(f"{total} fichier(s) photo/vidéo à traiter.")
+    print(f"{total} fichier(s) photo/vidéo/son à traiter.")
 
     if any(c["ext"] in (".heic", ".heif") for c in candidats) and not HEIC_OK:
         print("Attention : des HEIC détectés et pillow-heif absent (pip install pillow-heif).")
