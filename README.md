@@ -16,9 +16,14 @@ Trois commandes, trois cas d'usage :
 | `photos-migrate-gdrive` | Migration Google Drive → Nextcloud via deux remotes rclone |
 
 La date de prise de vue est lue en cascade — EXIF (`DateTimeOriginal` puis
-`DateTime`) → pour les vidéos, date de tournage via `ffprobe` → modtime distante
+`DateTime`) → pour les vidéos et sons, date via `ffprobe` → modtime distante
 (rclone) → date de modification du fichier → instant présent — donc **aucun
 fichier n'est jamais sauté** faute de métadonnées.
+
+**Extensions prises en charge** : images `.jpg .jpeg .png .heic .heif .webp
+.tif .tiff` ; vidéos `.mp4 .mov .m4v .avi .mkv .mts .m2ts .ts .mpg .mpeg .wmv
+.3gp .webm .flv .vob .ogv .dv` ; sons `.wav .mp3 .m4a .aac .flac .ogg .wma`.
+Toute autre extension est ignorée (comptée dans les « ignoré(s) »).
 
 ## Installation
 

@@ -103,6 +103,8 @@ def test_migrate_gdrive_dry_run_plan_et_doublons(monkeypatch, capsys):
     drive = [
         {"Path": "a.jpg", "Size": 10, "ModTime": "2024-07-15T10:30:00Z", "IsDir": False},
         {"Path": "sous/b.jpg", "Size": 20, "ModTime": "2023-01-05T08:00:00Z", "IsDir": False},
+        {"Path": "video.MTS", "Size": 30, "ModTime": "2008-06-01T12:00:00Z", "IsDir": False},
+        {"Path": "son.wav", "Size": 40, "ModTime": "2008-07-02T12:00:00Z", "IsDir": False},
         {"Path": "doc.txt", "Size": 5, "ModTime": "2024-01-01T00:00:00Z", "IsDir": False},
         {"Path": "dossier", "IsDir": True},
     ]
@@ -113,8 +115,10 @@ def test_migrate_gdrive_dry_run_plan_et_doublons(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "[doublon] a.jpg" in out  # même nom + même taille = déjà migré
     assert "[plan] b.jpg -> 2023/01" in out
+    assert "[plan] video.MTS -> 2008/06" in out  # .mts pris en charge
+    assert "[plan] son.wav -> 2008/07" in out  # .wav pris en charge
     assert "doc.txt" not in out  # extension non gérée
-    assert "2 fichier(s) photo/vidéo à traiter" in out
+    assert "4 fichier(s) photo/vidéo/son à traiter" in out
 
 
 def test_migrate_gdrive_dry_run_dossier_nc_absent(monkeypatch, capsys):
@@ -140,7 +144,7 @@ def test_migrate_gdrive_limit(monkeypatch, capsys):
     code = migrate_gdrive.main(["--dry-run", "--limit", "3"])
     assert code == 0
     out = capsys.readouterr().out
-    assert "3 fichier(s) photo/vidéo à traiter" in out
+    assert "3 fichier(s) photo/vidéo/son à traiter" in out
     assert "[plan] f2.jpg" in out and "[plan] f3.jpg" not in out
 
 

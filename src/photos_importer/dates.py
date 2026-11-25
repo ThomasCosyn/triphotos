@@ -1,7 +1,7 @@
 """Lecture de la date de prise de vue d'un fichier.
 
 Cascade de repli : EXIF (``DateTimeOriginal`` puis ``DateTime``) -> pour les
-vidéos, date de tournage via ``ffprobe`` -> modtime distante (rclone, RFC 3339)
+vidéos et sons, date via ``ffprobe`` -> modtime distante (rclone, RFC 3339)
 -> date de modification du fichier local -> instant présent. Aucun fichier
 n'est jamais « sauté » faute de date.
 """
@@ -23,7 +23,12 @@ except ImportError:
     HEIC_OK = False
 
 EXTS_IMAGES = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".tif", ".tiff"}
-EXTS_VIDEOS = {".mp4", ".mov", ".m4v", ".avi", ".mkv"}
+EXTS_VIDEOS = {
+    ".mp4", ".mov", ".m4v", ".avi", ".mkv",
+    ".mts", ".m2ts", ".ts",          # AVCHD et flux MPEG-TS
+    ".mpg", ".mpeg", ".wmv", ".3gp", ".webm", ".flv", ".vob", ".ogv", ".dv",
+}
+EXTS_AUDIO = {".wav", ".mp3", ".m4a", ".aac", ".flac", ".ogg", ".wma"}
 
 TAG_DATE_PRISE = 36867  # DateTimeOriginal : date de prise de vue
 TAG_DATE_MODIF = 306  # DateTime : dernier enregistrement par l'appareil
@@ -77,7 +82,7 @@ def parse_iso8601(brute: str) -> datetime | None:
 
 
 def date_video(chemin: Path) -> datetime | None:
-    """Date de tournage d'une vidéo via ffprobe (format_tags=creation_time), ou None.
+    """Date d'une vidéo (ou d'un son) via ffprobe (format_tags=creation_time), ou None.
 
     Retourne None si ffprobe est absent (paquet ffmpeg) ou illisible.
     """
@@ -115,7 +120,7 @@ def date_fichier(chemin: Path) -> datetime:
 def date_prise(chemin: Path, modtime: str | None = None) -> datetime:
     """Date de prise de vue d'un fichier, par cascade de repli.
 
-    Images : EXIF. Vidéos : date de tournage ffprobe. Puis modtime distante
+    Images : EXIF. Vidéos et sons : date ffprobe. Puis modtime distante
     (RFC 3339, migration rclone), puis mtime du fichier, puis l'instant présent.
     """
     extension = chemin.suffix.lower()
@@ -123,7 +128,7 @@ def date_prise(chemin: Path, modtime: str | None = None) -> datetime:
         date = date_exif(chemin)
         if date:
             return date
-    elif extension in EXTS_VIDEOS:
+    elif extension in EXTS_VIDEOS or extension in EXTS_AUDIO:
         date = date_video(chemin)
         if date:
             return date

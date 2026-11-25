@@ -44,6 +44,10 @@ class FauxDAV:
 def test_est_media():
     assert est_media(Path("a.JPG"))
     assert est_media(Path("b.mp4"))
+    assert est_media(Path("c.MTS"))  # AVCHD, casse quelconque
+    assert est_media(Path("d.m2ts"))
+    assert est_media(Path("e.wav"))  # son
+    assert est_media(Path("f.mp3"))
     assert not est_media(Path("notes.txt"))
 
 

@@ -12,7 +12,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from .dates import EXTS_IMAGES, EXTS_VIDEOS, HEIC_OK, chemin_yyyy_mm, date_prise
+from .dates import EXTS_AUDIO, EXTS_IMAGES, EXTS_VIDEOS, HEIC_OK, chemin_yyyy_mm, date_prise
 from .dedup import empreinte_sha256, nom_unique
 from .nextcloud_dav import NextcloudWebDAV
 
@@ -35,9 +35,9 @@ class Compteurs:
 
 
 def est_media(chemin: Path) -> bool:
-    """Vrai si l'extension est une image ou une vidéo gérée."""
+    """Vrai si l'extension est une image, une vidéo ou un son géré."""
     extension = chemin.suffix.lower()
-    return extension in EXTS_IMAGES or extension in EXTS_VIDEOS
+    return extension in EXTS_IMAGES or extension in EXTS_VIDEOS or extension in EXTS_AUDIO
 
 
 def avertir_heic(fichiers: Iterable[Path]) -> None:
