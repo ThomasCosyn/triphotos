@@ -14,7 +14,7 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
-from .. import rclone
+from .. import logs_temps_reel, rclone
 from ..dates import EXTS_AUDIO, EXTS_IMAGES, EXTS_VIDEOS, HEIC_OK, date_modtime_rfc3339, date_prise
 from ..dedup import IndexNomTailles, nom_unique
 
@@ -77,6 +77,7 @@ def lister_candidats(drive_remote: str, source: str) -> list[dict]:
 
 def main(argv: list[str] | None = None) -> int:
     """Point d'entrée console. Code de sortie 1 si des erreurs, 0 sinon."""
+    logs_temps_reel()
     args = construire_parseur().parse_args(argv)
 
     print(f"Listing de {args.drive_remote}:{args.source} ...")
